@@ -179,6 +179,6 @@ def run(start: dt.date = START, end: dt.date = END) -> None:
     store.write(db, "signals", signals_df)
     print(
         signals_df.group_by("signal").agg(
-            pl.len().alias("rows"), pl.col("date").min(), pl.col("date").max()
+            pl.len().alias("rows"), pl.col("date").min().alias("first"), pl.col("date").max().alias("last")
         )
     )
