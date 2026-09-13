@@ -854,12 +854,16 @@ wheels = [
 [[package]]
 name = "malatium"
 version = "0.1.0"
-source = { git = "https://github.com/Atium-Research/malatium#7f67a243624c9bf0544209b0e6b1d3da39afc0f5" }
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cvxpy" },
     { name = "dataframely" },
     { name = "numpy" },
     { name = "polars" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/c6/06/d054ea64ab8f8f6e3d6d14003b52ea9d843bcbd22b17941e5bbc46b73825/malatium-0.1.0.tar.gz", hash = "sha256:e7e45f1e75473f42fb06bb6338647be2adb4356946c7687e3189c7b08b938abe", size = 89265, upload-time = "2026-09-13T17:38:33.772Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cc/df/14e5cec570a74e534f0a94e6f23840d17633e98265b137887638fb881945/malatium-0.1.0-py3-none-any.whl", hash = "sha256:ecd36980288386a9dff27ef1fe6b17683848c86350955aed68b042323535a31c", size = 19643, upload-time = "2026-09-13T17:38:32.453Z" },
 ]
 
 [[package]]
@@ -945,7 +949,7 @@ requires-dist = [
     { name = "bear-lake", specifier = ">=0.1.5" },
     { name = "click", specifier = ">=8.1" },
     { name = "lxml", specifier = ">=5.0" },
-    { name = "malatium", git = "https://github.com/Atium-Research/malatium" },
+    { name = "malatium", specifier = ">=0.1.0" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "polars", specifier = ">=1.30" },

@@ -32,8 +32,6 @@ dev = [
     "ruff>=0.6",
 ]
 
-[tool.uv.sources]
-malatium = { git = "https://github.com/Atium-Research/malatium" }
 
 [build-system]
 requires = ["hatchling"]
