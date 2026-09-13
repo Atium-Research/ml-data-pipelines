@@ -853,7 +853,7 @@ wheels = [
 
 [[package]]
 name = "malatium"
-version = "0.1.0"
+version = "0.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cvxpy" },
@@ -861,9 +861,9 @@ dependencies = [
     { name = "numpy" },
     { name = "polars" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c6/06/d054ea64ab8f8f6e3d6d14003b52ea9d843bcbd22b17941e5bbc46b73825/malatium-0.1.0.tar.gz", hash = "sha256:e7e45f1e75473f42fb06bb6338647be2adb4356946c7687e3189c7b08b938abe", size = 89265, upload-time = "2026-09-13T17:38:33.772Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a4/b2/222919e34f6abdfb02a551bbe02b032ba971368ed8136909545b4cad16e1/malatium-0.2.0.tar.gz", hash = "sha256:8d736bfc1a448dc2c747544370cf8b9746d5ee1aca6a8848edb48b7a58154783", size = 89745, upload-time = "2026-09-13T18:39:07.288Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/cc/df/14e5cec570a74e534f0a94e6f23840d17633e98265b137887638fb881945/malatium-0.1.0-py3-none-any.whl", hash = "sha256:ecd36980288386a9dff27ef1fe6b17683848c86350955aed68b042323535a31c", size = 19643, upload-time = "2026-09-13T17:38:32.453Z" },
+    { url = "https://files.pythonhosted.org/packages/9b/7c/9ee43135f9004d25256a42f1c7a8af3426fa14ed70d02e4d729d95bea17d/malatium-0.2.0-py3-none-any.whl", hash = "sha256:951087e1a6f05625a241ef3ff0fc7ce9b20d96ec79069cbacde7899749e4adaf", size = 20068, upload-time = "2026-09-13T18:39:05.871Z" },
 ]
 
 [[package]]
@@ -949,7 +949,7 @@ requires-dist = [
     { name = "bear-lake", specifier = ">=0.1.5" },
     { name = "click", specifier = ">=8.1" },
     { name = "lxml", specifier = ">=5.0" },
-    { name = "malatium", specifier = ">=0.1.0" },
+    { name = "malatium", specifier = ">=0.2.0" },
     { name = "numpy", specifier = ">=2.0" },
     { name = "pandas", specifier = ">=2.2" },
     { name = "polars", specifier = ">=1.30" },
