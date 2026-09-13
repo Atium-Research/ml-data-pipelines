@@ -2,7 +2,7 @@
 
 The write side of the malatium data store. Pulls S&P 500 option chains, stock prices and reference data from ThetaData, Yahoo and Wikipedia into a [bear-lake](https://github.com/andrewhall1124/bear-lake) database, and builds the derived panels the vol books run on: the reference straddle returns, the factor risk model, the IV surface, realized vol and its forecast, stock features and the signals.
 
-Every table is canonical on disk: option roots as `symbol`, `right` as `C`/`P`, `iv` null where the vendor's inversion failed, `vega` per vol point. [ml-data](https://github.com/Atium-Research/ml-data) reads the same tables; [malatium](https://github.com/Atium-Research/malatium) consumes them as frames.
+Every table is canonical on disk: option roots as `symbol`, `right` as `C`/`P`, `iv` null where the vendor's inversion failed, `vega` per vol point. [ml-data-access](https://github.com/Atium-Research/ml-data-access) reads the same tables; [malatium](https://github.com/Atium-Research/malatium) consumes them as frames.
 
 ## Setup
 
