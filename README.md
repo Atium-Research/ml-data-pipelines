@@ -2,7 +2,7 @@
 
 The write side of the malatium data store. Pulls S&P 500 option chains, stock prices and reference data from ThetaData, Yahoo and Wikipedia into a [bear-lake](https://github.com/andrewhall1124/bear-lake) database, and builds the derived panels the vol books run on: the reference straddle returns, the factor risk model, the IV surface, realized vol and its forecast, stock features and the signals.
 
-Every table is canonical on disk: option roots as `symbol`, `right` as `C`/`P`, `iv` null where the vendor's inversion failed, `vega` per vol point. [ml-data-access](https://github.com/Atium-Research/ml-data-access) reads the same tables; [malatium](https://github.com/Atium-Research/malatium) consumes them as frames.
+Every table is canonical on disk: option roots as `symbol`, `right` as `C`/`P`, `iv` null where the vendor's inversion failed, `vega` per vol point. Every other column the vendor delivers (higher-order greeks, trade OHLC, quote sizes, raw `implied_vol` and `iv_error`, timestamps) follows the canonical ones unchanged, so the store is a complete copy of the pull. [ml-data-access](https://github.com/Atium-Research/ml-data-access) reads the same tables; [malatium](https://github.com/Atium-Research/malatium) consumes them as frames.
 
 ## Setup
 
@@ -62,7 +62,7 @@ Derived, in the order they are built:
 
 ## Things to know before trusting a number
 
-- **Delisted names carry a zero row** in the vendor's stock data; `canonicalize_stock` drops it.
+- **Delisted names carry a zero row** in `underlying`, kept so the store is complete; filter `close > 0` before computing a return.
 - **`iv` is null, not wrong.** About 3% of contract-days fail to invert; the canonical table nulls them instead of carrying the vendor's pinned 0.5.
 - **Open interest is one day stale by construction.** It reports the position after the previous close, which is what a trader at today's close knows, so it joins on the same `date`.
 - **Nothing checks that a symbol is the company the universe names** except `symbology_check`. Eighteen symbol-years are another company's chain; screen on `status != 'wrong_instrument'`. `thin_overlap` means the check could not run, not that it failed.

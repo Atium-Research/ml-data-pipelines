@@ -12,6 +12,11 @@ conventions fixed here:
 * `right` is `"C"` / `"P"`; `date` comes from `underlying_timestamp`, the
   stamp on the spot print the greeks were struck against.
 * `symbol` is the option-root spelling (BRK.B -> BRKB) in every table.
+
+Every other column the vendor delivers (higher-order greeks, trade OHLC,
+quote sizes and conditions, the raw `implied_vol` and `iv_error`, the
+timestamps) is carried through unchanged after the canonical columns, so
+the store is a complete copy and the vendor files can be deleted.
 """
 
 import numpy as np
@@ -20,6 +25,53 @@ import polars as pl
 from pipelines.utils import bs
 
 IV_ERROR_TOLERANCE = 1.0
+
+VENDOR_EXTRAS = [
+    "implied_vol",
+    "iv_error",
+    "rho",
+    "epsilon",
+    "lambda",
+    "vanna",
+    "charm",
+    "vomma",
+    "veta",
+    "vera",
+    "speed",
+    "zomma",
+    "color",
+    "ultima",
+    "d1",
+    "d2",
+    "dual_delta",
+    "dual_gamma",
+    "open",
+    "high",
+    "low",
+    "close",
+    "count",
+    "bid_size",
+    "bid_exchange",
+    "bid_condition",
+    "ask_size",
+    "ask_exchange",
+    "ask_condition",
+    "timestamp",
+    "underlying_timestamp",
+]
+STOCK_EXTRAS = [
+    "count",
+    "bid",
+    "ask",
+    "bid_size",
+    "bid_exchange",
+    "bid_condition",
+    "ask_size",
+    "ask_exchange",
+    "ask_condition",
+    "created",
+    "last_trade",
+]
 
 
 def detect_vega_scale(raw_df: pl.DataFrame, rate: float = 0.04, rows: int = 400) -> float:
@@ -72,6 +124,7 @@ def canonicalize_chain(raw_df: pl.DataFrame, vega_scale: float | None = None) ->
     """Vendor greeks rows to `CANONICAL_OPTION_SCHEMA` (without `year`)."""
     if vega_scale is None:
         vega_scale = detect_vega_scale(raw_df)
+    extras = [pl.col(column) for column in VENDOR_EXTRAS if column in raw_df.columns]
     return raw_df.select(
         pl.col("underlying_timestamp").dt.date().alias("date"),
         pl.col("symbol").cast(pl.String),
@@ -92,6 +145,7 @@ def canonicalize_chain(raw_df: pl.DataFrame, vega_scale: float | None = None) ->
         (pl.col("vega") * vega_scale).cast(pl.Float64).alias("vega"),
         pl.col("underlying_price").cast(pl.Float64).alias("underlying"),
         pl.col("volume").cast(pl.Int64),
+        *extras,
     ).sort("date", "expiration", "strike", "right")
 
 
@@ -120,21 +174,20 @@ def canonicalize_open_interest(raw_df: pl.DataFrame) -> pl.DataFrame:
 
 
 def canonicalize_stock(raw_df: pl.DataFrame) -> pl.DataFrame:
-    """Vendor stock EOD rows to `(date, symbol, open, high, low, close, volume)`.
+    """Vendor stock EOD rows with a `date` and the option-root `symbol`, every column kept.
 
-    Drops the vendor's zero-priced delisting rows, which would otherwise book
-    a -100% day. `symbol` is respelled to the option root.
+    The vendor emits a final row for a delisted name with a zero close; it is
+    kept here so the store is complete, and a return should filter
+    `close > 0` before it books a -100% day.
     """
-    return (
-        raw_df.select(
-            pl.col("created").dt.date().alias("date"),
-            pl.col("symbol").cast(pl.String).str.replace_all(r"\.", ""),
-            pl.col("open").cast(pl.Float64),
-            pl.col("high").cast(pl.Float64),
-            pl.col("low").cast(pl.Float64),
-            pl.col("close").cast(pl.Float64),
-            pl.col("volume").cast(pl.Int64),
-        )
-        .filter(pl.col("close") > 0)
-        .sort("date", "symbol")
-    )
+    extras = [pl.col(column) for column in STOCK_EXTRAS if column in raw_df.columns]
+    return raw_df.select(
+        pl.col("created").dt.date().alias("date"),
+        pl.col("symbol").cast(pl.String).str.replace_all(r"\.", ""),
+        pl.col("open").cast(pl.Float64),
+        pl.col("high").cast(pl.Float64),
+        pl.col("low").cast(pl.Float64),
+        pl.col("close").cast(pl.Float64),
+        pl.col("volume").cast(pl.Int64),
+        *extras,
+    ).sort("date", "symbol")

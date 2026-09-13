@@ -100,6 +100,12 @@ def to_vendor_chain(chain_df: pl.DataFrame) -> pl.DataFrame:
         .dt.replace_time_zone("America/New_York")
         .alias("underlying_timestamp"),
         pl.col("underlying").alias("underlying_price"),
+        pl.lit(0.1).alias("rho"),
+        pl.lit(0).cast(pl.Int64).alias("bid_size"),
+        pl.col("date")
+        .cast(pl.Datetime("ms"))
+        .dt.replace_time_zone("America/New_York")
+        .alias("timestamp"),
     )
 
 

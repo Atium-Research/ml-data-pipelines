@@ -4,8 +4,9 @@ The EOD greeks endpoint returns zero bids and asks for the index roots on a
 block of sessions, mostly 2020-2021, and a fresh pull gives the same. The
 15:59 first-order-greeks bar has the quotes. For each affected session this
 pulls that bar for every listed expiration and replaces bid, ask, mid, iv,
-delta, theta, vega and the underlying; gamma is nulled, since the vendor
-computed it from empty quotes.
+delta, theta, vega, rho, epsilon, lambda, the raw IV and error, the
+underlying and its timestamp; gamma and the higher-order greeks are nulled,
+since the vendor computed them from empty quotes.
 
 One request per (session, expiration) at ~2 s; SPXW lists 40-odd
 expirations a day, so a full repair is hours. Bars are checkpointed under
@@ -122,6 +123,12 @@ def build_patch(bars_df: pl.DataFrame) -> pl.DataFrame:
         pl.col("theta").cast(pl.Float64).alias("theta_new"),
         (pl.col("vega") * vega_scale).cast(pl.Float64).alias("vega_new"),
         pl.col("underlying_price").cast(pl.Float64).alias("underlying_new"),
+        pl.col("implied_vol").cast(pl.Float64).alias("implied_vol_new"),
+        pl.col("iv_error").cast(pl.Float64).alias("iv_error_new"),
+        pl.col("rho").cast(pl.Float64).alias("rho_new"),
+        pl.col("epsilon").cast(pl.Float64).alias("epsilon_new"),
+        pl.col("lambda").cast(pl.Float64).alias("lambda_new"),
+        pl.col("underlying_timestamp").alias("underlying_timestamp_new"),
     )
 
 
@@ -145,7 +152,37 @@ def repair_partition(db, root: str, year: int) -> None:
         return
     patch_df = build_patch(bars_df)
     patched = pl.col("ask_new").is_not_null()
-    replaced = ["bid", "ask", "iv", "delta", "theta", "vega", "underlying"]
+    replaced = [
+        "bid",
+        "ask",
+        "iv",
+        "delta",
+        "theta",
+        "vega",
+        "underlying",
+        "implied_vol",
+        "iv_error",
+        "rho",
+        "epsilon",
+        "lambda",
+        "underlying_timestamp",
+    ]
+    nulled = [
+        "gamma",
+        "vanna",
+        "charm",
+        "vomma",
+        "veta",
+        "vera",
+        "speed",
+        "zomma",
+        "color",
+        "ultima",
+        "d1",
+        "d2",
+        "dual_delta",
+        "dual_gamma",
+    ]
     repaired_df = (
         chain_df.join(patch_df, on=["date", "expiration", "strike", "right"], how="left")
         .with_columns(
@@ -159,7 +196,11 @@ def repair_partition(db, root: str, year: int) -> None:
         )
         .with_columns(
             ((pl.col("bid") + pl.col("ask")) / 2).alias("mid"),
-            pl.when(patched).then(None).otherwise(pl.col("gamma")).alias("gamma"),
+            *[
+                pl.when(patched).then(None).otherwise(pl.col(column)).alias(column)
+                for column in nulled
+                if column in chain_df.columns
+            ],
         )
         .select(chain_df.columns)
     )

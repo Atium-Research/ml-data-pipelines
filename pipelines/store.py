@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# The canonical columns the stack reads come first; every other column the
+# vendor delivers follows, as delivered, so the store is the only copy needed.
 CANONICAL_OPTION_SCHEMA = {
     "date": pl.Date,
     "symbol": pl.String,
@@ -34,6 +36,38 @@ CANONICAL_OPTION_SCHEMA = {
     "vega": pl.Float64,
     "underlying": pl.Float64,
     "volume": pl.Int64,
+    # vendor extras
+    "implied_vol": pl.Float64,
+    "iv_error": pl.Float64,
+    "rho": pl.Float64,
+    "epsilon": pl.Float64,
+    "lambda": pl.Float64,
+    "vanna": pl.Float64,
+    "charm": pl.Float64,
+    "vomma": pl.Float64,
+    "veta": pl.Float64,
+    "vera": pl.Float64,
+    "speed": pl.Float64,
+    "zomma": pl.Float64,
+    "color": pl.Float64,
+    "ultima": pl.Float64,
+    "d1": pl.Float64,
+    "d2": pl.Float64,
+    "dual_delta": pl.Float64,
+    "dual_gamma": pl.Float64,
+    "open": pl.Float64,
+    "high": pl.Float64,
+    "low": pl.Float64,
+    "close": pl.Float64,
+    "count": pl.Int64,
+    "bid_size": pl.Int64,
+    "bid_exchange": pl.Int64,
+    "bid_condition": pl.Int64,
+    "ask_size": pl.Int64,
+    "ask_exchange": pl.Int64,
+    "ask_condition": pl.Int64,
+    "timestamp": pl.Datetime("ms", "America/New_York"),
+    "underlying_timestamp": pl.Datetime("ms", "America/New_York"),
     "year": pl.Int32,
 }
 
@@ -105,6 +139,17 @@ TABLES: dict[str, Table] = {
             "low": pl.Float64,
             "close": pl.Float64,
             "volume": pl.Int64,
+            "count": pl.Int64,
+            "bid": pl.Float64,
+            "ask": pl.Float64,
+            "bid_size": pl.Int64,
+            "bid_exchange": pl.Int64,
+            "bid_condition": pl.Int64,
+            "ask_size": pl.Int64,
+            "ask_exchange": pl.Int64,
+            "ask_condition": pl.Int64,
+            "created": pl.Datetime("ms", "America/New_York"),
+            "last_trade": pl.Datetime("ms", "America/New_York"),
             "year": pl.Int32,
         },
         ["year"],
@@ -257,11 +302,22 @@ def ensure(db: bl.Database, name: str) -> None:
 
 
 def conform(name: str, frame_df: pl.DataFrame) -> pl.DataFrame:
-    """Add `year` where the table is partitioned on it, then select and cast to the schema."""
+    """Add `year` where the table is partitioned on it, then select and cast to the schema.
+
+    A schema column the frame lacks is written as nulls, so a pull that did
+    not deliver a vendor extra still lands.
+    """
     table = TABLES[name]
     if "year" in table.schema and "year" not in frame_df.columns:
         frame_df = frame_df.with_columns(pl.col("date").dt.year().cast(pl.Int32).alias("year"))
-    return frame_df.select([pl.col(column).cast(dtype) for column, dtype in table.schema.items()])
+    return frame_df.select(
+        [
+            pl.col(column).cast(dtype)
+            if column in frame_df.columns
+            else pl.lit(None, dtype=dtype).alias(column)
+            for column, dtype in table.schema.items()
+        ]
+    )
 
 
 def write(db: bl.Database, name: str, frame_df: pl.DataFrame, mode: str = "overwrite") -> None:

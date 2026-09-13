@@ -13,7 +13,10 @@ def test_vendor_vega_per_unit_iv_is_detected_and_rescaled():
     vendor_df = to_vendor_chain(chain_df)
     assert detect_vega_scale(vendor_df) == 0.01
     canonical_df = canonicalize_chain(vendor_df)
-    assert canonical_df.columns == [c for c in CANONICAL_OPTION_SCHEMA if c != "year"]
+    canonical = [c for c in CANONICAL_OPTION_SCHEMA if c != "year"]
+    assert canonical_df.columns[:15] == canonical[:15]
+    assert {"rho", "bid_size", "timestamp", "implied_vol", "iv_error"} <= set(canonical_df.columns)
+    assert all(c in canonical for c in canonical_df.columns)
     joined_df = canonical_df.join(
         chain_df, on=["date", "expiration", "strike", "right"], suffix="_expected"
     )
