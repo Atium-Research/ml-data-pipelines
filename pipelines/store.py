@@ -295,7 +295,7 @@ def available_years(name: str) -> list[int]:
     directory = table_dir(name)
     if not directory.is_dir():
         return []
-    return sorted(int(child.name) for child in directory.iterdir() if child.name.isdigit())
+    return sorted(int(child.stem) for child in directory.iterdir() if child.stem.isdigit())
 
 
 def available_symbols(name: str, year: int) -> list[str]:
